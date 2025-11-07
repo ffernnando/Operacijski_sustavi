@@ -61,6 +61,7 @@ void prekidna_rutina(int sig) {
 }
 
 int main() {
+
     TEKUCI_PRIORITET = 0;
     sigset(SIGINT, prekidna_rutina);
 

@@ -17,15 +17,10 @@ void* generiranje(void* arg) {
     while (pravo == 1) {
       usleep(5000);
     }
-  
-    pravo = 0;
       
-    //int N = *((int*)arg);
-    //cout<<"Generiranje - N: "<<N<<endl;
-
     for (int i = 0; i < arg_polje[0]; i++) {
       //Vrati na samo rand() kasnije!
-      polje_brojeva[i] = (double)(rand() % 1000 + 1);
+      polje_brojeva[i] = (double)(rand() % 100);
       cout<<"Polje_brojeva["<<i<<"]: "<<polje_brojeva[i]<<endl;
     }
 
@@ -43,8 +38,6 @@ void* racunanje(void* arg) {
     while (pravo == 0) {
       usleep(5000);
     }
-
-    pravo = 1;
     
     double suma = 0;
     for(int i = 0; i < arg_polje[0]; i++) {
@@ -59,6 +52,11 @@ void* racunanje(void* arg) {
 };
 
 int main(int argc, char* argv[]) {
+  if (argc != 3) {
+    cout<<"GRESKA!\nPri pokretanju programa morate unijeti tocno 2 argumenta: N i M!"<<endl;
+    exit(EXIT_FAILURE);
+  }
+  
   srand(time(0));
   int N = atoi(argv[1]) <= 10 ? atoi(argv[1]) : 10, M = atoi(argv[2]);
   cout<<"Main - N: "<<N<<" | M: "<<M<<endl;
