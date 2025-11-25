@@ -33,21 +33,15 @@ void sloziSegment() {
   TRAZIM = (int*)shmat(trazim_id, NULL, 0);
   BROJ = (int*)shmat(broj_id, NULL, 0);
 
+
   for(int i = 0; i < N; i++) {
     TRAZIM[i] = 0;
     BROJ[i] = 0;
   }
+  
 };
 
 
-<<<<<<< HEAD
-=======
-  shmdt(BROJ);
-  shmctl(broj_id, IPC_RMID, NULL);
-
-  exit(0);
-};
->>>>>>> f2caf27f1a592737bb6f1cd25d936a431c6a34c0
 
 
 int maksimum() {
@@ -82,7 +76,6 @@ void proc(int i) {
     ulazKO(i);
     for (int m = 1; m <= 5; m++) {
       cout<<"Proces: "<<i+1<<", K.O. br: "<<k<<" ("<<m<<"/5)"<<endl;
-      sleep(1);
     }
     izlazKO(i);
   }
@@ -90,11 +83,6 @@ void proc(int i) {
 
 int main(int argc, char* argv[]) {
   sigset(SIGINT, brisi);
-
-  if (argc != 2) {
-    cout<<"GRESKA!\nPri pokretanju programa morate unijeti tocno 1 argument za broj procesa - N!"<<endl;
-    exit(EXIT_FAILURE);
-  }
 
   N = atoi(argv[1]);
   sloziSegment();

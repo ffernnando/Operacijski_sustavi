@@ -14,15 +14,6 @@ int N;
 int trazim_id, broj_id;
 int *TRAZIM, *BROJ;
 
-void brisi(int sig) {
-  shmdt(TRAZIM);
-  shmctl(trazim_id, IPC_RMID, NULL);
-
-  shmdt(BROJ);
-  shmctl(broj_id, IPC_RMID, NULL);
-  exit(0);
-};
-
 void sloziSegment() {
   trazim_id = shmget(IPC_PRIVATE, sizeof(int) * N, 0600);
   broj_id = shmget(IPC_PRIVATE, sizeof(int) * N, 0600);
@@ -39,15 +30,15 @@ void sloziSegment() {
   }
 };
 
+void brisi(int sig) {
+  shmdt(TRAZIM);
+  shmctl(trazim_id, IPC_RMID, NULL);
 
-<<<<<<< HEAD
-=======
   shmdt(BROJ);
   shmctl(broj_id, IPC_RMID, NULL);
 
   exit(0);
 };
->>>>>>> f2caf27f1a592737bb6f1cd25d936a431c6a34c0
 
 
 int maksimum() {
