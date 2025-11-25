@@ -20,9 +20,6 @@ void* generiranje(void* arg) {
   
     pravo = 0;
       
-    //int N = *((int*)arg);
-    //cout<<"Generiranje - N: "<<N<<endl;
-
     for (int i = 0; i < arg_polje[0]; i++) {
       //Vrati na samo rand() kasnije!
       polje_brojeva[i] = (double)(rand() % 1000 + 1);
