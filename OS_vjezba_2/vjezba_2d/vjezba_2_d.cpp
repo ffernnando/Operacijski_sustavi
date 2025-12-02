@@ -40,14 +40,11 @@ void sloziSegment() {
 };
 
 
-<<<<<<< HEAD
-=======
   shmdt(BROJ);
   shmctl(broj_id, IPC_RMID, NULL);
 
   exit(0);
 };
->>>>>>> f2caf27f1a592737bb6f1cd25d936a431c6a34c0
 
 
 int maksimum() {

@@ -6,13 +6,13 @@
 
 using namespace std;
 
-int br_gen = 0;       // Broj generiranih brojeva
-int gl_var;           // Globalna varijabla za zadatak
-bool kraj = false;    // Signal za kraj generiranja
+int br_gen = 0;       // broj generiranih brojeva
+int gl_var;           // globalna varijabla za zadatak
+bool kraj = false;    // signal za kraj generiranja
 
 // Semafori
-sem_t postavljen_broj;   // Signalizira da je broj spreman
-sem_t procitan_broj;     // Signalizira da je broj pročitan
+sem_t postavljen_broj;   // signalizira da je broj spreman
+sem_t procitan_broj;     // signalizira da je broj pročitan
 
 
 //pošalji kao argument polje koje sadrži m i n pa da moreš na kraju
@@ -38,10 +38,11 @@ void* f_generiraj(void* arg) {
       ++br_gen;
   }
 
-  // Obavijesti sve dretve da nema više zadataka
+  // obavijesti sve dretve da nema više zadataka
   kraj = true;
-  // Signaliziraj svim dretvama koje čekaju
-  for (int i = 0; i < arg_polje[0]; ++i) sem_post(&postavljen_broj); // 10 je dovoljno za m <= 10
+  // dozvoli svim dretvama koje čekaju da ispitaju if (kraj) break;
+  // pa da se završe
+  for (int i = 0; i < arg_polje[0]; ++i) sem_post(&postavljen_broj);
 
   return NULL;
 }
@@ -49,17 +50,18 @@ void* f_generiraj(void* arg) {
 void* f_racunaj(void* arg) {
   
   while (true) {
-      // Čekaj da generirajuća dretva stavi broj
+      // čekaj da se zgenerira broj
       sem_wait(&postavljen_broj);
 
-      if (kraj) break;  // Kraj generiranja
+      if (kraj) break;  // dretva generiraj signalizirala da nema više zadataka
 
       int temp = gl_var;
       cout << "Dretva " << pthread_self() << " preuzela zadatak " << temp << endl;
 
-      // Signaliziraj generirajućoj dretvi da je broj pročitan
+      // signaliziraj da je broj pročitan
       sem_post(&procitan_broj);
-
+      
+      // jako jako veliki broj kad se računa faktorijela velikih brojeva
       long long sum = 0;
       for (int i = 1; i <= temp; i++) {
         sum += i;
