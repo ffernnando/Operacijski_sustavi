@@ -85,7 +85,7 @@ void proizvodjac(int n, int indeks) {
 void potrosac() {
   //potrosac čita broj po broj koji mu proizvođači šalju u spremnik
   //i onda ih dodaje zbroju
-  long zbroj = 0;
+  long long zbroj = 0;
   for (int i = 0; i < dijeljeniPodaci->UKUPNO; i++) {
       SemOp(2, -1); //ispitaj prazan - umanji prazan za 1 - uklonilo se jedno neprazno mjesto
       cout << "Potrosac prima " << dijeljeniPodaci->M[dijeljeniPodaci->IZLAZ] << endl;
@@ -102,11 +102,6 @@ void brisi() {
    shmctl(shmid, IPC_RMID, NULL);
 };
 
-void sigurnoIzadji() {
-   brisi();
-   SemRemove();
-};
-
 int main(int argc, char* argv[]) {
    if (argc != 3) {
       cout << "POGRESAN BROJ ULAZNIH PARAMETARA! MORATE UNIJETI BROJEVE m I n!" << endl;
@@ -118,23 +113,23 @@ int main(int argc, char* argv[]) {
    //n - broj slučajnih brojeva koje svaki proizvođač generira
    int n = atoi(argv[2]);
 
-   shmid = shmget(IPC_PRIVATE, sizeof(struct DijeljeniPodaci), 0600);
+   shmid = shmget(IPC_PRIVATE, sizeof(DijeljeniPodaci), 0600);
    if (shmid == -1) {
       cout << "KREIRANJE SEGMENTA DIJELJENE MEMORIJE NEUSPJELO!" << endl;
-      sigurnoIzadji();
       exit(1);
    }   
 
-   dijeljeniPodaci = (struct DijeljeniPodaci*) shmat(shmid, NULL, 0);
+   dijeljeniPodaci = (DijeljeniPodaci*) shmat(shmid, NULL, 0);
    
    //početne vrijednosti za dijeljene podatke
    dijeljeniPodaci->ULAZ = 0;
    dijeljeniPodaci->IZLAZ = 0;
    dijeljeniPodaci->UKUPNO = m*n;
 
-   //napravi 3 semafora - PIŠI, PUN, PRAZAN i postavi im početne vrijednosti
+   //napravi skup od 3 semafora - PIŠI, PUN, PRAZAN i postavi im početne vrijednosti
    if (SemGet(3) == -1) {
-      sigurnoIzadji();
+      brisi();
+      //SemRemove();
       exit(1);
    }
    SemSetVal(0, 1);
@@ -144,6 +139,9 @@ int main(int argc, char* argv[]) {
    switch(fork()) {
       case -1:
          cout << "GRESKA PRI KREIRANJU NOVOG PROCESA POTROSACA" << endl;
+         brisi();
+         SemRemove();
+         exit(1);
          break;
       case 0:
          potrosac();
@@ -154,6 +152,9 @@ int main(int argc, char* argv[]) {
             switch(fork()) {
                case -1: 
                   cout << "GRESKA PRI KREIRANJU NOVOG PROCESA PROIZVODJACA!" << endl;
+                  brisi();
+                  SemRemove();
+                  exit(1);
                   break;
                case 0: 
                   proizvodjac(n, i);
@@ -169,7 +170,8 @@ int main(int argc, char* argv[]) {
    }
 
    //OBAVEZNO na kraju izbriši semafore i segment dijeljene memorije
-   sigurnoIzadji();
+   brisi();
+   SemRemove();
    return 0;
 };
 

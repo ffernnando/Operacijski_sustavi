@@ -7,8 +7,8 @@
 using namespace std;
 
 int br_gen = 0;       // broj generiranih brojeva
-int gl_var;           // globalna varijabla za zadatak
-bool kraj = false;    // signal za kraj generiranja
+int gl_var;           // globalna varijabla - pohrana zadatka - ako je -1 znači da je finito
+
 
 // Semafori
 sem_t postavljen_broj;   // signalizira da je broj spreman
@@ -18,29 +18,28 @@ sem_t procitan_broj;     // signalizira da je broj pročitan
 //pošalji kao argument polje koje sadrži m i n pa da moreš na kraju
 //izvoditi for za svih m dretvi
 void* f_generiraj(void* arg) {
-  srand(pthread_self());
   //int n = *(int*)arg;
   int* arg_polje = (int*)arg;
 
   cout << "Dretva koja generira zadatke pocela je s radom. Broj zadataka = " << arg_polje[1] << endl;
 
   while (br_gen < arg_polje[1]) {
-      int x = rand() % 1000000000 + 1;
-      gl_var = x;
+    int x = rand() % 1000000000 + 1;
+    gl_var = x;
 
-      cout << "Generiran broj " << gl_var << endl;
+    cout << "Generiran broj " << gl_var << endl;
 
-      // Signaliziraj da je novi broj spreman
-      sem_post(&postavljen_broj);
+    // Signaliziraj da je novi broj spreman
+    sem_post(&postavljen_broj);
 
-      // Čekaj da neka dretva pročita broj
-      sem_wait(&procitan_broj);
+    // Čekaj da neka dretva pročita broj
+    sem_wait(&procitan_broj);
 
-      ++br_gen;
+    ++br_gen;
   }
 
   // obavijesti sve dretve da nema više zadataka
-  kraj = true;
+  gl_var = -1;
   // dozvoli svim dretvama koje čekaju da ispitaju if (kraj) break;
   // pa da se završe
   for (int i = 0; i < arg_polje[0]; ++i) sem_post(&postavljen_broj);
@@ -54,7 +53,7 @@ void* f_racunaj(void* arg) {
       // čekaj da se zgenerira broj
       sem_wait(&postavljen_broj);
 
-      if (kraj) break; // dretva generiraj signalizirala da nema više zadataka
+      if (gl_var == -1) break; // dretva generiraj signalizirala da nema više zadataka
 
       int temp = gl_var;
       cout << "Dretva " << indeks << ". preuzela zadatak " << temp << endl;
@@ -80,6 +79,7 @@ int main(int argc, char *argv[]) {
       return 0;
     }
     
+    srand(time(0));
 
     int m = atoi(argv[1]); // broj dretava potrošača
     int n = atoi(argv[2]); // broj zadataka
