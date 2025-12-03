@@ -21,26 +21,27 @@ using namespace std;
       PIŠI.v = 1, PUN.v = 5, PRAZAN.v = 0
 */
 
+// ------------------------------------ PREDUVJET ZA DIJELJENU MEMORIJU I SEMAFORE ------------------------------------
+
 struct DijeljeniPodaci {
    int ULAZ;
    int IZLAZ;
    int UKUPNO;
    int M[5];
 };
-
-int SemId; //id skupa semafora
-int shmid;
 struct DijeljeniPodaci *dijeljeniPodaci;
+int shmid;
 
-void SemGet(int n) {
-   SemId = semget(IPC_PRIVATE, n, 0600);
-   if (SemId == -1) {
-      cout << "NEMA SEMAFORA!" << endl;
-      exit(1);
-   }
-};
-
+int SemId;
 union semun { int val; struct semid_ds *buf; unsigned short *array; };
+
+
+// ------------------------------------ FUNKCIJE ZA RAD S IMENOVANIM SEMAFORIMA ------------------------------------
+int SemGet(int n) {
+   SemId = semget(IPC_PRIVATE, n, 0600);
+
+   return SemId;
+};
 
 int SemSetVal(int SemNum, int SemVal) {
    union semun arg;
@@ -62,26 +63,23 @@ void SemRemove() {
    semctl(SemId, 0, IPC_RMID, 0);
 };
 
-void proizvodjac( int n) {
-  //proizvođači pune dijeljeni spremnik broj po broj
-  //znači spremnik ima 5 mjesta max i onda ima kao buffer u kojem brojevi
-  //čekaju dok ih potrošač ne pročita i doda zbroju
-  //ULAZ = (ULAZ + 1) mod 5 => daje u biti da se za 5 indeksi
-  //vraćaju na 0 pa 6 bude indeks 1 itd.
-  //do while morti?
-  for (int i = 0; i < n; i++) {
+// ------------------------------------ DIO ZA PROIZVOĐAČA I POTROŠAČA  ------------------------------------
+
+void proizvodjac(int n, int indeks) {
+   srand(getpid());
+   for (int i = 0; i < n; i++) {
       SemOp(1, -1); //ispitaj je li puno
       SemOp(0, -1); //ispitaj piše li netko
 
       dijeljeniPodaci->M[dijeljeniPodaci->ULAZ] = rand();
-      cout << "Proizvodac " << getpid() << " salje \"" << dijeljeniPodaci->M[dijeljeniPodaci->ULAZ] << "\"" << endl; 
+      cout << "Proizvodac " << indeks << ". salje \"" << dijeljeniPodaci->M[dijeljeniPodaci->ULAZ] << "\"" << endl; 
 
       dijeljeniPodaci->ULAZ = (dijeljeniPodaci->ULAZ + 1) % 5;
 
       SemOp(0, 1); //oslobodi pisanje
       SemOp(2, 1); //povećaj prazan za 1
   }
-  cout << "Proizvodac " << getpid() << " zavrsio sa slanjem" << endl;
+  cout << "Proizvodac " << indeks << " zavrsio sa slanjem" << endl;
 };
 
 void potrosac() {
@@ -99,6 +97,81 @@ void potrosac() {
   cout << "Potrosac - zbroj primljenih brojeva = " << zbroj << endl;
 };
 
+void brisi() {
+   shmdt(dijeljeniPodaci);
+   shmctl(shmid, IPC_RMID, NULL);
+};
+
+void sigurnoIzadji() {
+   brisi();
+   SemRemove();
+};
+
+int main(int argc, char* argv[]) {
+   if (argc != 3) {
+      cout << "POGRESAN BROJ ULAZNIH PARAMETARA! MORATE UNIJETI BROJEVE m I n!" << endl;
+      return 0;
+   }
+
+   //m - broj procesa proizvođača
+   int m = atoi(argv[1]);
+   //n - broj slučajnih brojeva koje svaki proizvođač generira
+   int n = atoi(argv[2]);
+
+   shmid = shmget(IPC_PRIVATE, sizeof(struct DijeljeniPodaci), 0600);
+   if (shmid == -1) {
+      cout << "KREIRANJE SEGMENTA DIJELJENE MEMORIJE NEUSPJELO!" << endl;
+      sigurnoIzadji();
+      exit(1);
+   }   
+
+   dijeljeniPodaci = (struct DijeljeniPodaci*) shmat(shmid, NULL, 0);
+   
+   //početne vrijednosti za dijeljene podatke
+   dijeljeniPodaci->ULAZ = 0;
+   dijeljeniPodaci->IZLAZ = 0;
+   dijeljeniPodaci->UKUPNO = m*n;
+
+   //napravi 3 semafora - PIŠI, PUN, PRAZAN i postavi im početne vrijednosti
+   if (SemGet(3) == -1) {
+      sigurnoIzadji();
+      exit(1);
+   }
+   SemSetVal(0, 1);
+   SemSetVal(1, 5);
+   SemSetVal(2, 0);
+
+   switch(fork()) {
+      case -1:
+         cout << "GRESKA PRI KREIRANJU NOVOG PROCESA POTROSACA" << endl;
+         break;
+      case 0:
+         potrosac();
+         exit(0);
+         break;
+      default:
+         for (int i = 1; i <= m; i++) {
+            switch(fork()) {
+               case -1: 
+                  cout << "GRESKA PRI KREIRANJU NOVOG PROCESA PROIZVODJACA!" << endl;
+                  break;
+               case 0: 
+                  proizvodjac(n, i);
+                  exit(0);
+                  break;
+            }
+         }
+   }
+
+   //pričekaj m procesa proizvođača + 1 proces potrošač ! !!!
+   for (int i = 0; i < (m+1); i++) {
+      wait(NULL);
+   }
+
+   //OBAVEZNO na kraju izbriši semafore i segment dijeljene memorije
+   sigurnoIzadji();
+   return 0;
+};
 
 /*
 proces proizvođač
@@ -160,85 +233,3 @@ proces potrošač
    ispiši zbroj na zaslon
 kraj.
 */
-
-
-void brisi() {
-   shmdt(dijeljeniPodaci);
-   shmctl(shmid, IPC_RMID, NULL);
-};
-
-void sigurnoIzadji(int sig) {
-   SemRemove();
-   brisi();
-   exit(0);
-};
-
-int main(int argc, char* argv[]) {
-   if (argc != 3) {
-      cout << "POGRESAN BROJ ULAZNIH PARAMETARA! MORATE UNIJETI BROJEVE m I n!" << endl;
-      return 0;
-   }
-  /* int id = shmget(IPC_PRIVATE, sizeof(int) * N, 0600);
-  if(id == -1) {
-    return;
-  }*/ 
-
-   //m - broj procesa proizvođača
-   int m = atoi(argv[1]);
-   //n - broj slučajnih brojeva koje svaki proizvođač generira
-   int n = atoi(argv[2]);
-
-   shmid = shmget(IPC_PRIVATE, sizeof(struct DijeljeniPodaci), 0600);
-   if (shmid == -1) {
-      cout << "KREIRANJE SEGMENTA DIJELJENE MEMORIJE NEUSPJELO!" << endl;
-      exit(1);
-   }
-
-   dijeljeniPodaci = (struct DijeljeniPodaci*) shmat(shmid, NULL, 0);
-   
-   dijeljeniPodaci->ULAZ = 0;
-   dijeljeniPodaci->IZLAZ = 0;
-   dijeljeniPodaci->UKUPNO = m*n;
-   
-
-   srand(time(0));
-
-   //napravi 3 semafora - PIŠI, PUN, PRAZAN
-   SemGet(3);
-   SemSetVal(0, 1);
-   SemSetVal(1, 5);
-   SemSetVal(2, 0);
-
-   switch(fork()) {
-      case -1:
-         cout << "GRESKA PRI KREIRANJU NOVOG PROCESA POTROSACA" << endl;
-         break;
-      case 0:
-         potrosac();
-         shmdt(dijeljeniPodaci);
-         exit(0);
-         break;
-      default:
-         for (int i = 0; i < m; i++) {
-            switch(fork()) {
-               case -1: 
-                  cout << "GRESKA PRI KREIRANJU NOVOG PROCESA PROIZVODJACA!" << endl;
-                  break;
-               case 0: 
-                  proizvodjac(n);
-                  shmdt(dijeljeniPodaci);
-                  exit(0);
-                  break;
-            }
-         }
-   }
-
-   //pričekaj m procesa proizvođača + 1 proces potrošač
-   for (int i = 0; i < (m+1); i++) {
-      wait(NULL);
-   }
-
-   //OBAVEZNO na kraju izbriši semafore
-   sigurnoIzadji(0);
-   return 0;
-};

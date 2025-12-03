@@ -18,6 +18,7 @@ sem_t procitan_broj;     // signalizira da je broj pročitan
 //pošalji kao argument polje koje sadrži m i n pa da moreš na kraju
 //izvoditi for za svih m dretvi
 void* f_generiraj(void* arg) {
+  srand(pthread_self());
   //int n = *(int*)arg;
   int* arg_polje = (int*)arg;
 
@@ -48,15 +49,15 @@ void* f_generiraj(void* arg) {
 }
 
 void* f_racunaj(void* arg) {
-  
+  int indeks = *((int*) arg);
   while (true) {
       // čekaj da se zgenerira broj
       sem_wait(&postavljen_broj);
 
-      if (kraj) break;  // dretva generiraj signalizirala da nema više zadataka
+      if (kraj) break; // dretva generiraj signalizirala da nema više zadataka
 
       int temp = gl_var;
-      cout << "Dretva " << pthread_self() << " preuzela zadatak " << temp << endl;
+      cout << "Dretva " << indeks << ". preuzela zadatak " << temp << endl;
 
       // signaliziraj da je broj pročitan
       sem_post(&procitan_broj);
@@ -67,7 +68,7 @@ void* f_racunaj(void* arg) {
         sum += i;
       }
 
-      cout << "Dretva " << pthread_self() << " zadatak = " << temp << " zbroj = " << sum << endl;
+      cout << "Dretva " << indeks << ". zadatak = " << temp << " zbroj = " << sum << endl;
   }
 
   return NULL;
@@ -94,8 +95,10 @@ int main(int argc, char *argv[]) {
 
     pthread_create(&generiraj_id, NULL, f_generiraj, arg_polje);
 
-    for (int i = 0; i < m; i++) {
-      pthread_create(&racunaj_id[i], NULL, f_racunaj, NULL);
+    int polje_indeksa[m];
+    for (int i = 1; i <= m; i++) {
+      polje_indeksa[i-1] = i;
+      pthread_create(&racunaj_id[i-1], NULL, f_racunaj, &polje_indeksa[i-1]);
     }
 
     pthread_join(generiraj_id, NULL);

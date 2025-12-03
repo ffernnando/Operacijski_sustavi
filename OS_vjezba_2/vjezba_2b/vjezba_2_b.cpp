@@ -6,7 +6,7 @@
 
 using namespace std;
 
-double* polje_brojeva;
+int* polje_brojeva;
 int pravo = 0;
 
 //pravo = 0 --> generiranje se smije izvoditi
@@ -19,8 +19,8 @@ void* generiranje(void* arg) {
     }
       
     for (int i = 0; i < arg_polje[0]; i++) {
-      //Vrati na samo rand() kasnije!
-      polje_brojeva[i] = (double)(rand() % 100);
+
+      polje_brojeva[i] = (int)(rand() % 100);
       cout<<"Polje_brojeva["<<i<<"]: "<<polje_brojeva[i]<<endl;
     }
 
@@ -39,7 +39,7 @@ void* racunanje(void* arg) {
       usleep(5000);
     }
     
-    double suma = 0;
+    int suma = 0;
     for(int i = 0; i < arg_polje[0]; i++) {
       suma += polje_brojeva[i];
     }
@@ -52,6 +52,11 @@ void* racunanje(void* arg) {
 };
 
 int main(int argc, char* argv[]) {
+
+pthread_t id_novi;
+pthread_create(&id_novi, NULL, generiranje, NULL);
+
+
   if (argc != 3) {
     cout<<"GRESKA!\nPri pokretanju programa morate unijeti tocno 2 argumenta: N i M!"<<endl;
     exit(EXIT_FAILURE);
@@ -62,7 +67,7 @@ int main(int argc, char* argv[]) {
   cout<<"Main - N: "<<N<<" | M: "<<M<<endl;
   int arg_polje[] = {N, M};
 
-  polje_brojeva = new double[N];
+  polje_brojeva = new int[N];
 
   pthread_t id_prvi, id_drugi;
 
