@@ -102,11 +102,18 @@ void brisi() {
    shmctl(shmid, IPC_RMID, NULL);
 };
 
+void sigurnoIzadji(int sig) {
+   brisi();
+   SemRemove();
+   exit(0);
+};
+
 int main(int argc, char* argv[]) {
    if (argc != 3) {
       cout << "POGRESAN BROJ ULAZNIH PARAMETARA! MORATE UNIJETI BROJEVE m I n!" << endl;
       return 0;
    }
+   sigset(SIGINT, sigurnoIzadji);
 
    //m - broj procesa proizvođača
    int m = atoi(argv[1]);
@@ -174,6 +181,39 @@ int main(int argc, char* argv[]) {
    SemRemove();
    return 0;
 };
+
+/*
+// Neimenovani semafori
+sem_t semaforcina;
+sem_init(&semaforcina, 0, 5):
+sem_post(&semaforcina);
+sem_wait(&semaforcina);
+sem_destroy(&semaforcina);
+
+// Imenovani semafori
+// 3 naredbe: semget() - inicijalizacija; semop() - wait, post; semctl() - setval;
+int Semid = semget(IPC_PRIVATE, 5, 0600);
+int res = semctl(SemId, 2, SETVAL, val);
+
+int SemOp(int SemNum, int Op) {
+   struct sembuf SemBuf;
+   SemBuf.sem_num = SemNum;
+   SemBuf.sem_op = Op;
+   SemBuf.sem_flg = 0;
+   return semop(SemId, &SemBuf, 1);
+};
+
+int SemRemove() {
+   return semctl(SemId, 0, IPC_RMID);
+};
+
+int SemSetVal(int SemNum, int val) {
+   union semun arg;
+   arg.val = val;
+   return semctl(SemId, SemNum, SETVAL, arg);
+   
+};
+*/
 
 /*
 proces proizvođač
