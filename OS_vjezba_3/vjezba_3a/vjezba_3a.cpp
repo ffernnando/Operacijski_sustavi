@@ -3,6 +3,7 @@
 #include <pthread.h>
 #include <unistd.h>
 #include <semaphore.h>
+#include <signal.h>
 
 using namespace std;
 
@@ -73,7 +74,14 @@ void* f_racunaj(void* arg) {
   return NULL;
 }
 
+void sigurnoIzadji(int sig) {
+  sem_destroy(&postavljen_broj);
+  sem_destroy(&procitan_broj);
+};
+
 int main(int argc, char *argv[]) {
+    sigset(SIGINT, sigurnoIzadji);
+
     if (argc != 3) {
       cout << "Morate unijeti 2 argumenta: m i n!" << endl;
       return 0;

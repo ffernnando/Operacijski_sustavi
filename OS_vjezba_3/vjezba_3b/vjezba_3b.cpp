@@ -73,8 +73,9 @@ void proizvodjac(int n, int indeks) {
 
       dijeljeniPodaci->M[dijeljeniPodaci->ULAZ] = rand();
       cout << "Proizvodac " << indeks << ". salje \"" << dijeljeniPodaci->M[dijeljeniPodaci->ULAZ] << "\"" << endl; 
-
       dijeljeniPodaci->ULAZ = (dijeljeniPodaci->ULAZ + 1) % 5;
+
+      sleep(1);
 
       SemOp(0, 1); //oslobodi pisanje
       SemOp(2, 1); //povećaj prazan za 1
@@ -91,7 +92,9 @@ void potrosac() {
       cout << "Potrosac prima " << dijeljeniPodaci->M[dijeljeniPodaci->IZLAZ] << endl;
       zbroj += dijeljeniPodaci->M[dijeljeniPodaci->IZLAZ];
       dijeljeniPodaci->IZLAZ = (dijeljeniPodaci->IZLAZ + 1) % 5;
-      
+
+      sleep(1);
+
       SemOp(1, 1); //postavi pun - oslobodilo se jedno mjesto za upis u buffer
   }
   cout << "Potrosac - zbroj primljenih brojeva = " << zbroj << endl;
@@ -184,36 +187,40 @@ int main(int argc, char* argv[]) {
 
 /*
 // Neimenovani semafori
-sem_t semaforcina;
-sem_init(&semaforcina, 0, 5):
-sem_post(&semaforcina);
-sem_wait(&semaforcina);
-sem_destroy(&semaforcina);
+sem_t semafor;
+sem_init(&semafor, initial_value);
+sem_wait(&semafor);
+sem_post(&semafor);
+sem_destroy(&semafor);
 
 // Imenovani semafori
-// 3 naredbe: semget() - inicijalizacija; semop() - wait, post; semctl() - setval;
-int Semid = semget(IPC_PRIVATE, 5, 0600);
-int res = semctl(SemId, 2, SETVAL, val);
-
-int SemOp(int SemNum, int Op) {
-   struct sembuf SemBuf;
-   SemBuf.sem_num = SemNum;
-   SemBuf.sem_op = Op;
-   SemBuf.sem_flg = 0;
-   return semop(SemId, &SemBuf, 1);
-};
-
-int SemRemove() {
-   return semctl(SemId, 0, IPC_RMID);
+// Funkcije: semget() - semid; semop() - wait, post; semctl() - setval, ipc_rmid;
+void SemGet(int n) {
+   SemId = semget(IPC_PRIVATE, n, 0600);
 };
 
 int SemSetVal(int SemNum, int val) {
    union semun arg;
    arg.val = val;
    return semctl(SemId, SemNum, SETVAL, arg);
-   
 };
+
+int SemOp(int SemNum, int SemOp) {
+   struct sembuf Sembuf;
+   Sembuf.sem_num = SemNum;
+   Sembuf.sem_op = SemOp;
+   Sembuf.sem_flg = 0;
+   return semop(SemId, SemNum, &Sembuf, 1);
+};
+
+void SemRemove() {
+   semctl(SemId, 0, IPC_RMID, 0);
+};
+
+
 */
+
+
 
 /*
 proces proizvođač
