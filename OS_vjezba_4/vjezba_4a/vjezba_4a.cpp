@@ -48,10 +48,10 @@ void* dretFun(void* arg) {
   int x;
 
   // Zaštita unosa mutexom - inače bi bio raspašoj
-  pthread_mutex_lock(&unos);
+  pthread_mutex_lock(&m);
   cout << "Dretva " << *n << ". unesite broj" << endl;
   cin >> x;
-  pthread_mutex_unlock(&unos);
+  pthread_mutex_unlock(&m);
 
   // Poziv funkcije barijere kod koje svaka dretva čeka dok ne dođe zadnja dretva, nakon čega se svakoj dretvi
   // šalje signal kojim se ona propušta iz reda
