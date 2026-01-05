@@ -10,8 +10,6 @@ using namespace std;
 pthread_mutex_t m;
 pthread_cond_t red;
 
-pthread_mutex_t unos;
-
 int br = 0;
 int N;
 
@@ -66,12 +64,12 @@ int main(int argc, char* argv[]) {
     cout<<"GRESKA!\nPri pokretanju programa morate unijeti tocno 1 argument: N!"<<endl;
     exit(EXIT_FAILURE);
   }
+
   N = atoi(argv[1]);
-  cout << "N: " << N << endl;
+  cout << "Broj dretava = " << N << endl;
 
   // Inicijalizacija mutexa i uvjeta
   pthread_mutex_init(&m, NULL);
-  pthread_mutex_init(&unos, NULL);
   pthread_cond_init(&red, NULL);
 
   pthread_t id_polje[N];
@@ -88,7 +86,6 @@ int main(int argc, char* argv[]) {
 
   // Brisanje mutexa i uvjeta
   pthread_mutex_destroy(&m);
-  pthread_mutex_destroy(&unos);
   pthread_cond_destroy(&red);
 
   return 0;
