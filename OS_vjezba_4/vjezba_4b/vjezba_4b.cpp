@@ -2,6 +2,7 @@
 #include <cstdlib>
 #include <pthread.h>
 #include <unistd.h>
+#include <ctime>
 
 using namespace std;
 
@@ -60,13 +61,21 @@ void ispis(int vrsta) {
 
     cout << "Red Linux:";
     for (int i = 0; i < x; i++) {
-        if (temp_lin > 0) { cout << "L"; temp_lin--; }
-        else cout << "-";
+        if (temp_lin > 0) { 
+          cout << "L"; 
+          temp_lin--; 
+        }
+        else {
+          cout << "-";
+        }
     }
     cout << " Red Microsoft:";
     for (int i = 0; i < x; i++) {
-        if (temp_ms > 0) { cout << "M"; temp_ms--; }
-        else cout << "-";
+        if (temp_ms > 0) { 
+          cout << "M"; temp_ms--; 
+        } else {
+          cout << "-";
+        } 
     }
 
     cout << " Restoran:";
@@ -74,8 +83,11 @@ void ispis(int vrsta) {
     for (int i = 0; i < br[0]; i++) cout << "M";
 
     cout << " --> ";
-    if (vrsta == 0) cout << "M";
-    else cout << "L";
+    if (vrsta == 0) {
+      cout << "M";
+    } else {
+      cout << "L";
+    }
 }
 
 void udji(int vrsta) {
@@ -84,7 +96,7 @@ void udji(int vrsta) {
   ceka[vrsta]++;
 
   while (br[1 - vrsta] > 0 || ((SITI >= N) && (ceka[1 - vrsta] > 0))) {
-    // ispis stanja u restoranu i redovima
+    // ispis stanja u redovima
     ispis(vrsta);
     cout << " u red cekanja" << endl;
     pthread_cond_wait(&uv[vrsta], &M);
@@ -97,7 +109,7 @@ void udji(int vrsta) {
     SITI++;
   }
 
-  // ispis stanja u restoranu i redovima
+  // ispis stanja u restoranu
   ispis(vrsta);
   cout << " u restoran" << endl;
   pthread_mutex_unlock(&M);
@@ -131,12 +143,11 @@ programer(vrsta) {
 
 void* programer(void* arg) {
   int vrsta = *(int*)arg;
-  // sleep nešto
-  usleep(rand() % 100000);
+  
+  usleep(rand() % 100000); // simuliranje trajanja programiranja
   udji(vrsta);
 
-  // sleep nešto
-  usleep(rand() % 100000);
+  usleep(rand() % 100000); // simuliranje trajanja jedenja
   izadji(vrsta);
 
   return NULL;
@@ -147,6 +158,7 @@ int main(int argc, char* argv[]) {
     cout<<"GRESKA!\nPri pokretanju programa morate unijeti tocno 2 argumenta: N i M!"<<endl;
     exit(EXIT_FAILURE);
   }
+  srand(time(0));
   N = atoi(argv[1]);
   x = atoi(argv[2]);
 
@@ -156,6 +168,7 @@ int main(int argc, char* argv[]) {
 
   pthread_t id_linux[x], id_MS[x];
   int arg_ms[x], arg_lin[x];
+
   for (int i = 0; i < x; i++) {
     arg_ms[i] = 0;
     arg_lin[i] = 1;
@@ -171,7 +184,6 @@ int main(int argc, char* argv[]) {
   pthread_mutex_destroy(&M);
   pthread_cond_destroy(&uv[0]);
   pthread_cond_destroy(&uv[1]);
-
 
   return 0;
 };
