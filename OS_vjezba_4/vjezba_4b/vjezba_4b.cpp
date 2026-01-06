@@ -61,21 +61,21 @@ void ispis(int vrsta) {
 
     cout << "Red Linux:";
     for (int i = 0; i < x; i++) {
-        if (temp_lin > 0) { 
-          cout << "L"; 
-          temp_lin--; 
-        }
-        else {
-          cout << "-";
-        }
+      if (temp_lin > 0) { 
+        cout << "L"; 
+        temp_lin--; 
+      }
+      else {
+        cout << "-";
+      }
     }
     cout << " Red Microsoft:";
     for (int i = 0; i < x; i++) {
-        if (temp_ms > 0) { 
-          cout << "M"; temp_ms--; 
-        } else {
-          cout << "-";
-        } 
+      if (temp_ms > 0) { 
+        cout << "M"; temp_ms--; 
+      } else {
+        cout << "-";
+      } 
     }
 
     cout << " Restoran:";
@@ -155,7 +155,7 @@ void* programer(void* arg) {
 
 int main(int argc, char* argv[]) {
   if (argc != 3) {
-    cout<<"GRESKA!\nPri pokretanju programa morate unijeti tocno 2 argumenta: N i M!"<<endl;
+    cout<<"GRESKA!\nPri pokretanju programa morate unijeti tocno 2 argumenta: N i x!"<<endl;
     exit(EXIT_FAILURE);
   }
   srand(time(0));
