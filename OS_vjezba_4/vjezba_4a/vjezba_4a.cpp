@@ -27,9 +27,14 @@ int N;
   }
 */
 
-// ---------------------------------------- FUNKCIJA ZA BARIJERU ----------------------------------------
-void Barijera() {
+// ---------------------------------------- FUNKCIJA BARIJERA ----------------------------------------
+void* barijera(void* arg) {
+  int* n = (int*) arg;
+  int x;
+
   pthread_mutex_lock(&m); // Zaključati_monitor(m)
+  cout << "Dretva " << *n << ". unesite broj" << endl;
+  cin >> x;
   br++;
   if (br < N) {
     pthread_cond_wait(&red, &m); // Čekati_u_redu(red, m)
@@ -37,25 +42,9 @@ void Barijera() {
     br = 0;
     pthread_cond_broadcast(&red); // Propustiti_sve_iz_reda(red)
   }
-  pthread_mutex_unlock(&m); // Otključati_monitor(m)
-}
-
-// ---------------------------------------- FUNKCIJA DRETVE ----------------------------------------
-void* dretFun(void* arg) {
-  int* n = (int*) arg;
-  int x;
-
-  // Zaštita unosa mutexom - inače bi bio raspašoj
-  pthread_mutex_lock(&m);
-  cout << "Dretva " << *n << ". unesite broj" << endl;
-  cin >> x;
-  pthread_mutex_unlock(&m);
-
-  // Poziv funkcije barijere kod koje svaka dretva čeka dok ne dođe zadnja dretva, nakon čega se svakoj dretvi
-  // šalje signal kojim se ona propušta iz reda
-  Barijera();
-
   cout << "Dretva " << *n << ". uneseni broj je " << x << endl;
+  pthread_mutex_unlock(&m);
+  
   return NULL;
 }
 
@@ -77,7 +66,7 @@ int main(int argc, char* argv[]) {
 
   for (int i = 0; i < N; i++) {
     i_polje[i] = i;
-    pthread_create(&id_polje[i], NULL, dretFun, &i_polje[i]);
+    pthread_create(&id_polje[i], NULL, barijera, &i_polje[i]);
   }
 
   for (int i = 0; i < N; i++) {
