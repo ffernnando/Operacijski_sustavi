@@ -6,12 +6,6 @@
 
 using namespace std;
 
-// ---------------------------------------- GLOBALNI MUTEXI, UVJETI I VARIJABLE ----------------------------------------
-pthread_mutex_t m;
-pthread_cond_t red;
-
-int br = 0;
-int N;
 
 /* PSEUDOKOD iz knjige
   m-funkcija Barijera(m, red) {
@@ -27,20 +21,25 @@ int N;
   }
 */
 
-// ---------------------------------------- FUNKCIJA BARIJERA ----------------------------------------
+pthread_mutex_t m;
+pthread_cond_t red;
+
+int br = 0;
+int N;
+
 void* barijera(void* arg) {
   int* n = (int*) arg;
   int x;
 
-  pthread_mutex_lock(&m); // Zaključati_monitor(m)
+  pthread_mutex_lock(&m);
   cout << "Dretva " << *n << ". unesite broj" << endl;
   cin >> x;
   br++;
   if (br < N) {
-    pthread_cond_wait(&red, &m); // Čekati_u_redu(red, m)
+    pthread_cond_wait(&red, &m);
   } else {
     br = 0;
-    pthread_cond_broadcast(&red); // Propustiti_sve_iz_reda(red)
+    pthread_cond_broadcast(&red);
   }
   cout << "Dretva " << *n << ". uneseni broj je " << x << endl;
   pthread_mutex_unlock(&m);
@@ -57,7 +56,6 @@ int main(int argc, char* argv[]) {
   N = atoi(argv[1]);
   cout << "Broj dretava = " << N << endl;
 
-  // Inicijalizacija mutexa i uvjeta
   pthread_mutex_init(&m, NULL);
   pthread_cond_init(&red, NULL);
 
@@ -73,7 +71,6 @@ int main(int argc, char* argv[]) {
     pthread_join(id_polje[i], NULL);
   }
 
-  // Brisanje mutexa i uvjeta
   pthread_mutex_destroy(&m);
   pthread_cond_destroy(&red);
 

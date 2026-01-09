@@ -6,7 +6,6 @@
 
 using namespace std;
 
-
 /* STRUKTURE PODATAKA S POČETNIM VRIJEDNOSTIMA
   M - varijabla zaključavanja (monitorski semafor)
   2 reda uvjeta uv[2] -> red_mik, red_lin
@@ -46,17 +45,15 @@ using namespace std;
   }
 */
 
-pthread_mutex_t M; // monitorski semafor
-pthread_cond_t uv[2]; // 2 reda uvjeta
-int N, x; // broj programer koji mogu ući u restoran dok drugi čekaju
-
-int br[2] = { 0, 0 }; // dva brojača koliko je programera u restoranu
-// int vrsta = 0; //0 (MS) ili 1 (Linux)
-int ceka[2] = { 0, 0 }; // dva brojača koliko programera čeka
-int SITI = 0; // brojač koliko se programera jedne vrste najelo
+pthread_mutex_t M;
+pthread_cond_t uv[2];
+int N, x;
+int br[2] = { 0, 0 };
+int ceka[2] = { 0, 0 };
+int SITI = 0;
 
 void ispis(int vrsta) {
-    // kopije brojača da se ne dira stvarno stanje
+    // kopije brojača da se ne mijenaj stvarno stanje
     int temp_ms = ceka[0], temp_lin = ceka[1];
 
     cout << "Red Linux:";
@@ -96,7 +93,6 @@ void udji(int vrsta) {
   ceka[vrsta]++;
 
   while (br[1 - vrsta] > 0 || ((SITI >= N) && (ceka[1 - vrsta] > 0))) {
-    // ispis stanja u redovima
     ispis(vrsta);
     cout << " u red cekanja" << endl;
     pthread_cond_wait(&uv[vrsta], &M);
@@ -109,7 +105,6 @@ void udji(int vrsta) {
     SITI++;
   }
 
-  // ispis stanja u restoranu
   ispis(vrsta);
   cout << " u restoran" << endl;
   pthread_mutex_unlock(&M);
@@ -129,17 +124,6 @@ void izadji(int vrsta) {
   pthread_mutex_unlock(&M);
 };
 
-/*
-programer(vrsta) {
-  programiraj;
-  
-  udi(vrsta); -> monitor? vrsta = red?
-
-  jedi;
-
-  izađi(vrsta); -> monitor?
-}
-*/
 
 void* programer(void* arg) {
   int vrsta = *(int*)arg;
@@ -172,8 +156,8 @@ int main(int argc, char* argv[]) {
   for (int i = 0; i < x; i++) {
     arg_ms[i] = 0;
     arg_lin[i] = 1;
-    pthread_create(&id_MS[i], NULL, programer, &arg_ms[i]); //microsoft
-    pthread_create(&id_linux[i], NULL, programer, &arg_lin[i]); //linux
+    pthread_create(&id_MS[i], NULL, programer, &arg_ms[i]);
+    pthread_create(&id_linux[i], NULL, programer, &arg_lin[i]);
   }
 
   for (int i = 0; i < x; i++) {
